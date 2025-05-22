@@ -98,15 +98,22 @@ export default function W9Extractor() {
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   };
 
+  // Optum palette for wrapper backgrounds
+  const optumBg = "bg-gradient-to-br from-[#d9f6fa] via-white to-[#fff]";
+
   return (
     <div
       className={cn(
         "min-h-screen w-full flex flex-col items-center justify-start",
-        "bg-gradient-to-br from-[#bfdcff] via-[#ffe2fd] to-[#f6dbff] dark:from-gray-900 dark:via-indigo-900 dark:to-gray-800 transition-colors"
+        optumBg,
+        "transition-colors"
       )}
     >
       <header className="w-full flex justify-between items-center px-4 md:px-16 py-8">
-        <h1 className="font-extrabold text-2xl md:text-3xl text-[#1a2050] dark:text-white drop-shadow-sm flex items-center gap-2">
+        <h1
+          className="font-extrabold text-2xl md:text-3xl drop-shadow-sm flex items-center gap-2"
+          style={{ color: "#424242" /* GrayDark */ }}
+        >
           <span role="img" aria-label="document">📄</span>
           <span className="font-black tracking-tight">W9 Extractor</span>
         </h1>
@@ -118,27 +125,36 @@ export default function W9Extractor() {
         <h2
           className="text-3xl md:text-5xl font-extrabold mb-4 drop-shadow-lg"
           style={{
-            background: "linear-gradient(90deg, #4438ca 10%, #e243bb 50%, #e687fc 100%)",
+            background: "linear-gradient(90deg, #E87722 0%, #F2B411 60%, #FF612B 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            textShadow: "2px 2px 12px #f8c8fc33",
+            textShadow: "2px 2px 12px #ffecb433",
+            letterSpacing: "0.01em",
           }}
         >
           Instantly Extract Data from your W9 PDFs
         </h2>
-        <p className="text-lg md:text-xl text-[#46495e] dark:text-gray-200 font-medium mb-6 max-w-2xl drop-shadow">
-          Securely upload your W9 form PDFs and let our smart extractor pull out the data you need. Enjoy fast, accurate, and beautiful results any device, day or night.
+        <p className="text-lg md:text-xl font-medium mb-6 max-w-2xl drop-shadow"
+          style={{
+            color: "#636363"
+          }}>
+          Securely upload your W9 form PDFs and let our smart extractor pull out the data you need. Fast, accurate, Optum-branded results.
         </p>
       </section>
 
-      {/* FILE UPLOAD & RESULTS CENTERED CONTAINER */}
-      <div className="flex flex-col w-full items-center justify-center">
-        {/* CENTERED UPLOAD FORM */}
-        <div className={cn(
-          "w-full max-w-2xl flex flex-col items-center shadow-xl rounded-3xl bg-white/90 dark:bg-zinc-950/90 px-6 py-8 mb-8",
-          "backdrop-blur-[2px] ring-1 ring-indigo-100/40 dark:ring-indigo-600/30 relative z-10"
-        )}
-        style={{ boxShadow: "0 8px 40px 8px #e0d2f766" }}>
+      {/* CENTERED UPLOAD FORM */}
+      <div className="w-full flex justify-center items-center mb-4" style={{ marginTop: 0 }}>
+        <div
+          className={cn("flex flex-col items-center justify-center rounded-2xl px-8 py-6 shadow-xl")}
+          style={{
+            background: "#FFFFFF",
+            boxShadow: "0 8px 40px 8px #f7eee366",
+            borderRadius: "20px",
+            maxWidth: 600,
+            minWidth: 340,
+            border: "1.5px solid #B3B3B3",
+          }}
+        >
           <W9UploadForm
             loading={loading}
             handleExtract={handleExtract}
@@ -146,32 +162,21 @@ export default function W9Extractor() {
             fileInputRef={fileInputRef}
           />
         </div>
-
-        {/* CENTERED RESULTS AREA (CONTAINER) */}
-        <div
-          className={cn(
-            "flex flex-col w-full items-center justify-center",
-            uploadedFiles.length === 0 && "opacity-50 pointer-events-none"
-          )}
-          style={{
-            // Ensure the container is truly centered and doesn't exceed max width on XL screens
-            maxWidth: "1200px",
-            margin: "0 auto",
-            width: "100vw",
-          }}
-        >
-          <W9Results
-            loading={loading}
-            uploadedFiles={uploadedFiles}
-            result={result}
-            selected={selected}
-            setSelected={setSelected}
-            handleDownloadAll={handleDownloadAll}
-          />
-        </div>
       </div>
-      <footer className="pt-10 pb-4 text-center text-xs text-[#545577] dark:text-gray-400 opacity-75">
-        &copy; {new Date().getFullYear()} W9 Extractor Tool. Made with <span className="text-pink-400">♥</span>.
+
+      {/* CENTERED RESULTS + DROPDOWN */}
+      <div className="w-full flex flex-col items-center justify-center px-0" style={{ minHeight: 440, width: "100vw" }}>
+        <W9Results
+          loading={loading}
+          uploadedFiles={uploadedFiles}
+          result={result}
+          selected={selected}
+          setSelected={setSelected}
+          handleDownloadAll={handleDownloadAll}
+        />
+      </div>
+      <footer className="pt-10 pb-4 text-center text-xs" style={{ color: "#636363", opacity: 0.75 }}>
+        &copy; {new Date().getFullYear()} W9 Extractor Tool, Optum. Made with <span className="text-[#E87722]">♥</span>.
       </footer>
     </div>
   );
