@@ -12,12 +12,12 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { ZoomIn, ZoomOut } from "lucide-react";
 
 type ExtractionResult = {
   file: string;
   response: string;
 };
-
 type W9ResultsProps = {
   loading: boolean;
   uploadedFiles: File[];
@@ -42,6 +42,13 @@ export const W9Results: React.FC<W9ResultsProps> = ({
     }
   }, [result, selected, setSelected]);
 
+  // PDF zoom state
+  const [pdfZoom, setPdfZoom] = React.useState(1);
+  // Reset zoom if file changes or files re-uploaded
+  React.useEffect(() => {
+    setPdfZoom(1);
+  }, [selected, uploadedFiles.length]);
+
   const currentResult =
     result.find((r) => r.file === selected) ?? result[0] ?? null;
 
@@ -50,18 +57,18 @@ export const W9Results: React.FC<W9ResultsProps> = ({
   if (!uploadedFiles.length) return null;
 
   return (
-    <main className="flex-1">
-      {/* DROPDOWN TO SELECT FILE */}
+    <main className="w-full">
+      {/* FILE DROPDOWN */}
       {!loading && uploadedFiles.length > 1 && (
-        <div className="w-full flex justify-center mb-4">
+        <div className="flex justify-center w-full mb-4">
           <Select
             value={selected || uploadedFiles[0]?.name}
             onValueChange={(val) => setSelected(val)}
           >
-            <SelectTrigger className="w-64 bg-white dark:bg-zinc-800 border border-indigo-400 dark:border-fuchsia-700">
+            <SelectTrigger className="w-full bg-white dark:bg-zinc-800 border border-indigo-400 dark:border-fuchsia-700">
               <SelectValue placeholder="Select a file..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-white dark:bg-zinc-800">
               <SelectGroup>
                 {uploadedFiles.map((file) => (
                   <SelectItem
@@ -83,32 +90,67 @@ export const W9Results: React.FC<W9ResultsProps> = ({
           <Skeleton className="w-full max-w-2xl h-96" />
         </div>
       )}
+
       {!loading && uploadedFiles.length > 0 && currentResult && (
-        <div className="grid gap-8 md:grid-cols-2">
-          {/* PDF Preview */}
-          <div>
-            <Card className="h-full bg-gradient-to-br from-white to-indigo-100 dark:from-zinc-900 dark:to-indigo-950 shadow-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+          {/* LEFT COLUMN: PDF Preview */}
+          <div className="flex flex-col items-center">
+            <Card className="h-full w-full bg-gradient-to-br from-white to-indigo-100 dark:from-zinc-900 dark:to-indigo-950 shadow-lg">
               <CardContent>
-                <div className="font-bold text-indigo-900 dark:text-fuchsia-300 mb-2">PDF Preview</div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-bold text-indigo-900 dark:text-fuchsia-300">PDF Preview</div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="border-indigo-400 dark:border-fuchsia-700"
+                      aria-label="Zoom out"
+                      onClick={() => setPdfZoom(z => Math.max(z - 0.15, 0.25))}
+                    >
+                      <ZoomOut />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="border-indigo-400 dark:border-fuchsia-700"
+                      aria-label="Zoom in"
+                      onClick={() => setPdfZoom(z => Math.min(z + 0.15, 3))}
+                    >
+                      <ZoomIn />
+                    </Button>
+                  </div>
+                </div>
                 {(() => {
                   const file = uploadedFiles.find(f => f.name === currentResult.file);
                   if (!file) return (<div className="text-sm text-muted-foreground mt-4">PDF not found.</div>);
                   return (
-                    <iframe
-                      title={`PDF Preview - ${file.name}`}
-                      src={getPdfUrl(file)}
-                      className="w-full h-80 border rounded shadow"
-                      allow="autoplay"
-                      aria-label={`PDF Preview for ${file.name}`}
-                    />
+                    <div className="w-full flex justify-center">
+                      <iframe
+                        title={`PDF Preview - ${file.name}`}
+                        src={getPdfUrl(file)}
+                        className="border rounded shadow bg-white"
+                        style={{
+                          width: `${280 * pdfZoom}px`,
+                          height: `${320 * pdfZoom}px`,
+                          minWidth: 240,
+                          minHeight: 180,
+                          maxWidth: "100%",
+                          maxHeight: "60vh",
+                          transition: "all 0.2s cubic-bezier(.23,1.07,.42,1)",
+                          zoom: pdfZoom,
+                        }}
+                        allow="autoplay"
+                        aria-label={`PDF Preview for ${file.name}`}
+                      />
+                    </div>
                   );
                 })()}
               </CardContent>
             </Card>
           </div>
-          {/* Extracted JSON */}
+          {/* RIGHT COLUMN: Extracted JSON */}
           <div>
-            <Card className="h-full bg-gradient-to-bl from-white to-pink-100 dark:from-zinc-900 dark:to-pink-950 shadow-lg">
+            <Card className="h-full w-full bg-gradient-to-bl from-white to-pink-100 dark:from-zinc-900 dark:to-pink-950 shadow-lg">
               <CardContent>
                 <div className="font-bold text-fuchsia-700 dark:text-fuchsia-200 mb-2">Extracted JSON</div>
                 {(() => {

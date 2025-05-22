@@ -152,19 +152,13 @@ export default function W9Extractor() {
         />
       </div>
 
-      {/* RESULTS AREA */}
-      <div className={cn(
-        "flex flex-col md:flex-row gap-8 w-full max-w-6xl mx-auto px-2 relative z-10",
-        uploadedFiles.length === 0 && "opacity-50 pointer-events-none"
-      )}>
-        {/* SIDEBAR: Files */}
-        <W9Sidebar
-          uploadedFiles={uploadedFiles}
-          selected={selected}
-          setSelected={setSelected}
-          loading={loading}
-        />
-        {/* MAIN PREVIEW */}
+      {/* RESULTS AREA (NO SIDEBAR, CENTERED DROPDOWN & 2 COL GRID) */}
+      <div
+        className={cn(
+          "flex flex-col w-full max-w-4xl mx-auto px-2 relative z-10", // reduce width for nicer centering/layout
+          uploadedFiles.length === 0 && "opacity-50 pointer-events-none"
+        )}
+      >
         <W9Results
           loading={loading}
           uploadedFiles={uploadedFiles}
