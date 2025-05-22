@@ -5,22 +5,29 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 
 export function ThemeSwitcher() {
-  const { theme, setTheme } = useTheme();
-  // Safe defaults
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+
   React.useEffect(() => setMounted(true), []);
 
-  if (!mounted) return null; // Avoid SSR mismatch
+  if (!mounted) return null;
+
+  // Use resolvedTheme for SSR-safe detection
+  const isDark = (resolvedTheme || theme) === "dark";
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       className="border border-primary/20 transition-all duration-200"
+      tabIndex={0}
+      type="button"
     >
-      {theme === "dark" ? <Sun className="text-yellow-400" /> : <Moon className="text-blue-600" />}
+      {isDark
+        ? <Sun className="text-yellow-400" />
+        : <Moon className="text-blue-600" />}
     </Button>
   );
 }
