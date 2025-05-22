@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { cn } from "@/lib/utils";
+import { W9UploadForm } from "@/components/W9UploadForm";
+import { W9Sidebar } from "@/components/W9Sidebar";
+import { W9Results } from "@/components/W9Results";
 
 type ExtractionResult = {
   file: string;
@@ -70,11 +72,6 @@ export default function W9Extractor() {
     toast({ title: "Extraction complete!" });
     setSelected(uploadedFiles[0]?.name ?? null);
   };
-
-  const currentResult =
-    result.find((r) => r.file === selected) ?? result[0] ?? null;
-
-  const getPdfUrl = (file: File) => URL.createObjectURL(file);
 
   const handleDownloadAll = () => {
     const jsonRaw = Object.fromEntries(result.map((r) => [r.file, r.response]));
@@ -147,66 +144,12 @@ export default function W9Extractor() {
         )}
         style={{ boxShadow: "0 8px 40px 8px #e0d2f766" }}
       >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleExtract();
-          }}
-          // Changed: Use flex-row for horizontal row, items-center for vertical alignment
-          className="w-full flex flex-row gap-4 items-center"
-        >
-          {/* Input + Label stack */}
-          <div className="flex flex-col gap-1 flex-1">
-            <Label
-              htmlFor="file-uploader"
-              className="font-semibold text-[#4438ca] dark:text-fuchsia-300 text-base"
-            >
-              Upload PDF files
-            </Label>
-            <Input
-              ref={fileInputRef}
-              id="file-uploader"
-              type="file"
-              accept="application/pdf"
-              multiple
-              onChange={handleFileChange}
-              className="bg-white/80 dark:bg-zinc-800/70 border border-[#7a72ba] dark:border-fuchsia-700 transition-colors font-semibold outline-none focus:ring-2 focus:ring-[#c77dfa]/60"
-              disabled={loading}
-              required
-              style={{ minHeight: "44px" }} // To better align with button
-            />
-            <div className="text-xs text-muted-foreground pt-1 pl-1">
-              Only PDF files are supported.
-            </div>
-          </div>
-          <div className="flex items-end justify-end h-full pb-6 md:pb-0"> {/* pb-6 aligns the button towards baseline with desktop; mobile unaffected */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className={cn(
-                "px-8 py-2 font-semibold rounded-xl text-white shadow-lg transition-all duration-150 relative",
-                "bg-gradient-to-br from-[#5b34ec] via-[#d935ae] to-[#fd62d9]",
-                "hover:from-[#3821a6] hover:to-[#a43ffe]",
-                "outline-none ring-0 border-0",
-                loading && "pointer-events-none"
-              )}
-              style={{
-                boxShadow: "0 2px 24px -4px #d7b2f7b8",
-                minHeight: "44px", // Matches file input height
-                marginBottom: "0", // Ensure baseline alignment
-              }}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <Skeleton className="h-4 w-4 rounded-full bg-primary animate-pulse" />
-                  Extracting...
-                </span>
-              ) : (
-                "Extract Data"
-              )}
-            </Button>
-          </div>
-        </form>
+        <W9UploadForm
+          loading={loading}
+          handleExtract={handleExtract}
+          handleFileChange={handleFileChange}
+          fileInputRef={fileInputRef}
+        />
       </div>
 
       {/* RESULTS AREA */}
@@ -215,111 +158,21 @@ export default function W9Extractor() {
         uploadedFiles.length === 0 && "opacity-50 pointer-events-none"
       )}>
         {/* SIDEBAR: Files */}
-        <aside className={cn(
-          "md:w-64 w-full flex-shrink-0",
-          "rounded-lg bg-indigo-50/90 dark:bg-zinc-800 shadow-md",
-          uploadedFiles.length === 0 && "hidden"
-        )}>
-          <Card className="bg-transparent border-none shadow-none">
-            <CardContent className="pt-4">
-              <div className="font-semibold text-indigo-700 dark:text-pink-200 mb-2">Documents</div>
-              <ul className="space-y-1">
-                {(uploadedFiles.length > 0 ? uploadedFiles : []).map((file) => (
-                  <li key={file.name}>
-                    <Button
-                      variant={selected === file.name ? "secondary" : "ghost"}
-                      className={cn(
-                        "w-full justify-start truncate font-medium rounded transition",
-                        selected === file.name
-                          ? "bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white shadow"
-                          : "hover:bg-indigo-100 dark:hover:bg-zinc-700"
-                      )}
-                      size="sm"
-                      onClick={() => setSelected(file.name)}
-                      disabled={loading}
-                    >
-                      {file.name}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </aside>
-
+        <W9Sidebar
+          uploadedFiles={uploadedFiles}
+          selected={selected}
+          setSelected={setSelected}
+          loading={loading}
+        />
         {/* MAIN PREVIEW */}
-        <main className="flex-1">
-          {loading && (
-            <div className="flex w-full items-center justify-center h-96">
-              <Skeleton className="w-full max-w-2xl h-96" />
-            </div>
-          )}
-          {!loading && uploadedFiles.length > 0 && currentResult && (
-            <div className="grid gap-8 md:grid-cols-2">
-              {/* PDF Preview */}
-              <div>
-                <Card className="h-full bg-gradient-to-br from-white to-indigo-100 dark:from-zinc-900 dark:to-indigo-950 shadow-lg">
-                  <CardContent>
-                    <div className="font-bold text-indigo-900 dark:text-fuchsia-300 mb-2">PDF Preview</div>
-                    {(() => {
-                      const file = uploadedFiles.find(f => f.name === currentResult.file);
-                      if (!file) return (<div className="text-sm text-muted-foreground mt-4">PDF not found.</div>);
-                      return (
-                        <iframe
-                          title={`PDF Preview - ${file.name}`}
-                          src={getPdfUrl(file)}
-                          className="w-full h-80 border rounded shadow"
-                          allow="autoplay"
-                          aria-label={`PDF Preview for ${file.name}`}
-                        />
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-              </div>
-              {/* Extracted JSON */}
-              <div>
-                <Card className="h-full bg-gradient-to-bl from-white to-pink-100 dark:from-zinc-900 dark:to-pink-950 shadow-lg">
-                  <CardContent>
-                    <div className="font-bold text-fuchsia-700 dark:text-fuchsia-200 mb-2">Extracted JSON</div>
-                    {(() => {
-                      try {
-                        const data = JSON.parse(currentResult.response);
-                        return (
-                          <div className="bg-gray-900 text-white rounded p-4 overflow-auto text-xs font-mono h-80 max-h-80 border border-gray-800 shadow-inner">
-                            <pre>{JSON.stringify(data, null, 2)}</pre>
-                          </div>
-                        );
-                      } catch (e) {
-                        return (
-                          <>
-                            <div className="text-red-600 mb-2 font-semibold">Invalid JSON</div>
-                            <textarea
-                              className="bg-gray-100 border text-xs rounded p-2 w-full h-28"
-                              value={currentResult.response}
-                              readOnly
-                            />
-                          </>
-                        );
-                      }
-                    })()}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
-          {!loading && result.length > 0 && (
-            <div className="flex justify-end mt-6">
-              <Button
-                variant="outline"
-                className="border-indigo-400 dark:border-fuchsia-700 font-semibold"
-                onClick={handleDownloadAll}
-              >
-                Download Combined JSON
-              </Button>
-            </div>
-          )}
-        </main>
+        <W9Results
+          loading={loading}
+          uploadedFiles={uploadedFiles}
+          result={result}
+          selected={selected}
+          setSelected={setSelected}
+          handleDownloadAll={handleDownloadAll}
+        />
       </div>
       <footer className="pt-10 pb-4 text-center text-xs text-[#545577] dark:text-gray-400 opacity-75">
         &copy; {new Date().getFullYear()} W9 Extractor Tool. Made with <span className="text-pink-400">♥</span>.
@@ -327,4 +180,3 @@ export default function W9Extractor() {
     </div>
   );
 }
-
