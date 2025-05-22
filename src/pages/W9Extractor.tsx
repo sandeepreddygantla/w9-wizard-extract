@@ -114,9 +114,7 @@ export default function W9Extractor() {
       </header>
 
       {/* HERO BANNER */}
-      <section
-        className="w-full flex flex-col justify-center items-center text-center py-4 md:py-10"
-      >
+      <section className="w-full flex flex-col justify-center items-center text-center py-4 md:py-10">
         <h2
           className="text-3xl md:text-5xl font-extrabold mb-4 drop-shadow-lg"
           style={{
@@ -133,40 +131,44 @@ export default function W9Extractor() {
         </p>
       </section>
 
-      {/* FILE UPLOAD CARD */}
-      <div
-        className={cn(
-          "w-full max-w-xl mx-auto shadow-xl rounded-3xl bg-white/90 dark:bg-zinc-950/90 px-6 py-8 mb-8",
-          "flex flex-col items-center",
-          "backdrop-blur-[2px]",
-          "ring-1 ring-indigo-100/40 dark:ring-indigo-600/30 relative",
-          "z-10"
+      {/* FILE UPLOAD & RESULTS CENTERED CONTAINER */}
+      <div className="flex flex-col w-full items-center justify-center">
+        {/* CENTERED UPLOAD FORM */}
+        <div className={cn(
+          "w-full max-w-2xl flex flex-col items-center shadow-xl rounded-3xl bg-white/90 dark:bg-zinc-950/90 px-6 py-8 mb-8",
+          "backdrop-blur-[2px] ring-1 ring-indigo-100/40 dark:ring-indigo-600/30 relative z-10"
         )}
-        style={{ boxShadow: "0 8px 40px 8px #e0d2f766" }}
-      >
-        <W9UploadForm
-          loading={loading}
-          handleExtract={handleExtract}
-          handleFileChange={handleFileChange}
-          fileInputRef={fileInputRef}
-        />
-      </div>
+        style={{ boxShadow: "0 8px 40px 8px #e0d2f766" }}>
+          <W9UploadForm
+            loading={loading}
+            handleExtract={handleExtract}
+            handleFileChange={handleFileChange}
+            fileInputRef={fileInputRef}
+          />
+        </div>
 
-      {/* RESULTS AREA (NO SIDEBAR, CENTERED DROPDOWN & 2 COL GRID) */}
-      <div
-        className={cn(
-          "flex flex-col w-full max-w-4xl mx-auto px-2 relative z-10", // reduce width for nicer centering/layout
-          uploadedFiles.length === 0 && "opacity-50 pointer-events-none"
-        )}
-      >
-        <W9Results
-          loading={loading}
-          uploadedFiles={uploadedFiles}
-          result={result}
-          selected={selected}
-          setSelected={setSelected}
-          handleDownloadAll={handleDownloadAll}
-        />
+        {/* CENTERED RESULTS AREA (CONTAINER) */}
+        <div
+          className={cn(
+            "flex flex-col w-full items-center justify-center",
+            uploadedFiles.length === 0 && "opacity-50 pointer-events-none"
+          )}
+          style={{
+            // Ensure the container is truly centered and doesn't exceed max width on XL screens
+            maxWidth: "1200px",
+            margin: "0 auto",
+            width: "100vw",
+          }}
+        >
+          <W9Results
+            loading={loading}
+            uploadedFiles={uploadedFiles}
+            result={result}
+            selected={selected}
+            setSelected={setSelected}
+            handleDownloadAll={handleDownloadAll}
+          />
+        </div>
       </div>
       <footer className="pt-10 pb-4 text-center text-xs text-[#545577] dark:text-gray-400 opacity-75">
         &copy; {new Date().getFullYear()} W9 Extractor Tool. Made with <span className="text-pink-400">♥</span>.

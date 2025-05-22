@@ -53,20 +53,30 @@ export const W9Results: React.FC<W9ResultsProps> = ({
 
   if (!uploadedFiles.length) return null;
 
-  // Layout sizing
-  // 80vh is a good fit for desktop, falls back to 60vh at small screen.
-  // 16px gutter (gap-4).
-  // On mobile, columns stack.
+  // Theme values for styling
+  const bgPanel = "bg-white dark:bg-zinc-900";
+  const panelBorder = "border border-indigo-200 dark:border-fuchsia-700";
+  const gutter = 4; // tailwind gap-4 = 16px
+
+  // Layout: container width - stretches as much as possible, centered.
+  // Columns: minWidth 340px for each, flex 1.
+  // Responsive: stack on mobile (grid-cols-1, else grid-cols-2).
   return (
-    <main className="w-screen max-w-none px-0">
-      {/* FILE DROPDOWN */}
+    <main className="w-full flex flex-col items-center justify-center">
+      {/* Dropdown centered & full width of two columns */}
       {!loading && uploadedFiles.length > 1 && (
-        <div className="flex justify-center w-full mb-4">
+        <div
+          className="flex justify-center w-full mb-4"
+          style={{ maxWidth: 1200, margin: "0 auto" }}
+        >
           <Select
             value={selected || uploadedFiles[0]?.name}
-            onValueChange={(val) => setSelected(val)}
+            onValueChange={val => setSelected(val)}
           >
-            <SelectTrigger className="w-full max-w-3xl bg-white dark:bg-zinc-800 border border-indigo-400 dark:border-fuchsia-700">
+            <SelectTrigger className={cn(
+              "w-full max-w-full bg-white dark:bg-zinc-800 border border-indigo-400 dark:border-fuchsia-700 text-base font-semibold shadow-sm",
+              "rounded-lg px-4 py-3"
+            )}>
               <SelectValue placeholder="Select a file..." />
             </SelectTrigger>
             <SelectContent className="z-50 bg-white dark:bg-zinc-800">
@@ -87,7 +97,10 @@ export const W9Results: React.FC<W9ResultsProps> = ({
       )}
 
       {loading && (
-        <div className="flex w-full items-center justify-center" style={{ height: "80vh" }}>
+        <div
+          className="flex w-full items-center justify-center"
+          style={{ height: "80vh", maxWidth: 1200, margin: "0 auto" }}
+        >
           <Skeleton className="w-full h-full max-w-7xl" />
         </div>
       )}
@@ -95,20 +108,23 @@ export const W9Results: React.FC<W9ResultsProps> = ({
       {!loading && uploadedFiles.length > 0 && currentResult && (
         <div
           className={cn(
-            "w-full grid",
-            "grid-cols-1 md:grid-cols-2", // Split to 2 columns on md+
+            "w-full flex flex-row items-stretch justify-center", // two panels side by side
             "gap-4", // 16px gutter between columns
-            "max-w-none", // Full width
-            "mx-0" // Remove side margin so columns touch viewport edge
           )}
           style={{
-            height: "80vh",
-            minHeight: 320,
+            maxWidth: 1200,
+            width: "100vw",
+            minHeight: 440,
           }}
         >
-          {/* LEFT COLUMN: PDF Preview */}
-          <div className="flex flex-col h-full w-full overflow-hidden">
-            <div className="flex items-center justify-between mb-2 px-2">
+          {/* LEFT COLUMN: PDF Preview (fills column, fits 1 page, scrollable) */}
+          <div
+            className={cn(bgPanel, panelBorder, "flex flex-col w-1/2 h-[75vh] rounded-lg overflow-hidden shadow")}
+            style={{
+              minWidth: 340,
+            }}
+          >
+            <div className="flex items-center justify-between mb-2 px-3 pt-3">
               <div className="font-bold text-indigo-900 dark:text-fuchsia-300">PDF Preview</div>
               <div className="flex gap-2">
                 <Button
@@ -117,6 +133,7 @@ export const W9Results: React.FC<W9ResultsProps> = ({
                   className="border-indigo-400 dark:border-fuchsia-700"
                   aria-label="Zoom out"
                   onClick={() => setPdfZoom(z => Math.max(z - 0.15, 0.25))}
+                  tabIndex={0}
                 >
                   <ZoomOut />
                 </Button>
@@ -126,27 +143,27 @@ export const W9Results: React.FC<W9ResultsProps> = ({
                   className="border-indigo-400 dark:border-fuchsia-700"
                   aria-label="Zoom in"
                   onClick={() => setPdfZoom(z => Math.min(z + 0.15, 3))}
+                  tabIndex={0}
                 >
                   <ZoomIn />
                 </Button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto w-full h-0" style={{ minHeight: 0 }}>
+            <div className="flex-1 h-auto flex flex-col overflow-auto w-full" style={{ minHeight: 0 }}>
               {(() => {
                 const file = uploadedFiles.find(f => f.name === currentResult.file);
                 if (!file) return (<div className="text-sm text-muted-foreground mt-4">PDF not found.</div>);
+                // The key is important so it resets the doc on file change.
                 return (
                   <iframe
+                    key={file.name + pdfZoom}
                     title={`PDF Preview - ${file.name}`}
                     src={getPdfUrl(file)}
-                    className="w-full h-full border-none"
+                    className="flex-1 w-full border-none"
                     style={{
                       width: "100%",
-                      height: "100%",
-                      minHeight: 0,
-                      minWidth: 0,
-                      maxWidth: "100%",
-                      maxHeight: "100%",
+                      height: "calc(72vh - 50px)",
+                      minHeight: 400,
                       background: "white",
                       zoom: pdfZoom,
                       display: "block",
@@ -158,10 +175,16 @@ export const W9Results: React.FC<W9ResultsProps> = ({
               })()}
             </div>
           </div>
-          {/* RIGHT COLUMN: Extracted JSON */}
-          <div className="flex flex-col h-full w-full overflow-hidden">
-            <div className="font-bold text-fuchsia-700 dark:text-fuchsia-200 mb-2 px-2">Extracted JSON</div>
-            <div className="flex-1 bg-gray-900 text-white rounded p-2 overflow-y-auto text-xs font-mono border border-gray-800 shadow-inner h-0" style={{
+
+          {/* RIGHT COLUMN: JSON Output */}
+          <div
+            className={cn(bgPanel, panelBorder, "flex flex-col w-1/2 h-[75vh] rounded-lg overflow-hidden shadow")}
+            style={{
+              minWidth: 340,
+            }}
+          >
+            <div className="font-bold text-fuchsia-700 dark:text-fuchsia-200 mb-2 px-3 pt-3">Extracted JSON</div>
+            <div className="flex-1 flex flex-col bg-gray-900 text-white rounded p-3 overflow-y-auto text-xs font-mono border border-gray-800 shadow-inner h-0" style={{
               minHeight: 0,
               height: "100%",
               maxHeight: "100%",
@@ -189,8 +212,9 @@ export const W9Results: React.FC<W9ResultsProps> = ({
           </div>
         </div>
       )}
+
       {!loading && result.length > 0 && (
-        <div className="flex justify-end mt-6 px-2">
+        <div className="flex justify-end mt-6 w-full" style={{ maxWidth: 1200 }}>
           <Button
             variant="outline"
             className="border-indigo-400 dark:border-fuchsia-700 font-semibold"
