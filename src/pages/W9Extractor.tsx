@@ -1,11 +1,13 @@
 
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { cn } from "@/lib/utils";
 
 type ExtractionResult = {
   file: string;
@@ -13,16 +15,11 @@ type ExtractionResult = {
 };
 
 function useExtractW9Data() {
-  // Stub for actual API call
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ExtractionResult[]>([]);
   const extract = async (files: File[]) => {
     setLoading(true);
-
-    // TODO: Upload files to backend API and get structured response.
-    // This stub simulates extraction and returns a fake JSON after timeout.
     await new Promise((r) => setTimeout(r, 1500));
-
     setResult(
       files.map((f) => ({
         file: f.name,
@@ -45,7 +42,6 @@ function useExtractW9Data() {
         ),
       }))
     );
-
     setLoading(false);
   };
   return { loading, extract, result, setResult };
@@ -79,18 +75,13 @@ export default function W9Extractor() {
   const currentResult =
     result.find((r) => r.file === selected) ?? result[0] ?? null;
 
-  // Helper for nice preview of PDFs (browser's PDF viewer)
   const getPdfUrl = (file: File) => URL.createObjectURL(file);
 
-  // Helper for download
   const handleDownloadAll = () => {
-    const jsonRaw = Object.fromEntries(
-      result.map((r) => [r.file, r.response])
-    );
+    const jsonRaw = Object.fromEntries(result.map((r) => [r.file, r.response]));
     const blob = new Blob(
       [
         (() => {
-          // Try to parse to JSON
           try {
             const parsed = Object.fromEntries(
               Object.entries(jsonRaw).map(([k, v]) => [k, JSON.parse(v)])
@@ -111,161 +102,193 @@ export default function W9Extractor() {
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   };
 
+  // === LANDING HERO SECTION ===
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col py-8">
-      <div className="max-w-5xl mx-auto w-full">
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              📄 W9 Extractor Tool
-            </CardTitle>
-            <p className="text-gray-500 mt-2">
-              Upload one or multiple W9 PDF forms. The tool extracts data and displays a preview.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleExtract();
-              }}
-              className="flex flex-col md:flex-row gap-4 items-center md:items-end"
-            >
-              <div className="flex flex-col gap-2 w-full md:w-auto">
-                <Label htmlFor="file-uploader" className="font-semibold">
-                  Upload PDF files
-                </Label>
-                <Input
-                  ref={fileInputRef}
-                  id="file-uploader"
-                  type="file"
-                  accept="application/pdf"
-                  multiple
-                  onChange={handleFileChange}
-                  className="bg-white"
-                  disabled={loading}
-                  required
-                />
-                <div className="text-xs text-muted-foreground">
-                  Only PDF files are supported.
-                </div>
-              </div>
-              <Button type="submit" disabled={loading} className="md:ml-2">
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <Skeleton className="h-4 w-4 rounded-full bg-primary animate-pulse" />
-                    Extracting...
-                  </span>
-                ) : (
-                  "Extract Data"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+    <div className={cn(
+      "min-h-screen w-full flex flex-col items-center",
+      "bg-gradient-to-br from-blue-200 from-30% via-fuchsia-100 to-pink-100 dark:from-gray-900 dark:to-gray-800 dark:via-indigo-900 transition-colors",
+    )}>
+      <header className="w-full flex justify-between items-center px-4 md:px-12 py-6">
+        <h1 className="font-extrabold text-2xl md:text-3xl text-primary drop-shadow-sm flex items-center gap-2">
+          <span role="img" aria-label="document">📄</span>
+          W9 Extractor
+        </h1>
+        <ThemeSwitcher />
+      </header>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar for file list */}
-          <aside className="lg:w-64 w-full flex-shrink-0">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-1">
-                  {(uploadedFiles.length > 0 ? uploadedFiles : []).map((file) => (
-                    <li key={file.name}>
-                      <Button
-                        variant={selected === file.name ? "secondary" : "ghost"}
-                        className="w-full justify-start truncate"
-                        size="sm"
-                        onClick={() => setSelected(file.name)}
-                        disabled={loading}
-                      >
-                        {file.name}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </aside>
+      {/* HERO BANNER */}
+      <section className="w-full flex flex-col justify-center items-center text-center py-6 md:py-12 mb-0">
+        <h2 className="text-3xl md:text-5xl font-extrabold bg-gradient-to-r from-indigo-600 via-pink-500 to-fuchsia-500 bg-clip-text text-transparent mb-4 drop-shadow-lg">
+          Instantly Extract Data from your W9 PDFs
+        </h2>
+        <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 font-medium mb-6 max-w-xl drop-shadow">
+          Securely upload your W9 form PDFs and let our smart extractor pull out the data you need. Enjoy fast, accurate, and beautiful results any device, day or night.
+        </p>
+      </section>
 
-          {/* Main preview section */}
-          <main className="flex-1">
-            {loading && (
-              <div className="flex w-full items-center justify-center h-96">
-                <Skeleton className="w-1/2 h-96" />
-              </div>
+      {/* FILE UPLOAD CARD */}
+      <div className={cn(
+        "w-full max-w-2xl mx-auto bg-white/90 rounded-2xl shadow-2xl pb-8 px-4 md:px-10 mb-8 dark:bg-zinc-900/90",
+        "ring-1 ring-indigo-200/40 dark:ring-indigo-800/50 isolate"
+      )}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleExtract();
+          }}
+          className="flex flex-col md:flex-row gap-4 items-center md:items-end py-6"
+        >
+          <div className="flex flex-col gap-2 w-full md:w-auto">
+            <Label htmlFor="file-uploader" className="font-semibold text-indigo-800 dark:text-fuchsia-300">
+              Upload PDF files
+            </Label>
+            <Input
+              ref={fileInputRef}
+              id="file-uploader"
+              type="file"
+              accept="application/pdf"
+              multiple
+              onChange={handleFileChange}
+              className="bg-white dark:bg-zinc-800/70 border-2 border-indigo-200/50 dark:border-fuchsia-700 transition-colors"
+              disabled={loading}
+              required
+            />
+            <div className="text-xs text-muted-foreground">
+              Only PDF files are supported.
+            </div>
+          </div>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="md:ml-2 bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-fuchsia-600 hover:to-indigo-600 text-white shadow-xl transition-all"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded-full bg-primary animate-pulse" />
+                Extracting...
+              </span>
+            ) : (
+              "Extract Data"
             )}
-            {!loading && currentResult && (
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* PDF Preview */}
-                <div>
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="text-base">PDF Preview</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {(() => {
-                        const file = uploadedFiles.find(f => f.name === currentResult.file);
-                        if (!file) return (<div className="text-sm text-muted-foreground mt-4">PDF not found.</div>);
-                        return (
-                          <iframe
-                            title={`PDF Preview - ${file.name}`}
-                            src={getPdfUrl(file)}
-                            className="w-full h-96 border rounded shadow"
-                            allow="autoplay"
-                            aria-label={`PDF Preview for ${file.name}`}
-                          />
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
-                </div>
-                {/* Extracted JSON */}
-                <div>
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="text-base">Extracted JSON</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {(() => {
-                        try {
-                          const data = JSON.parse(currentResult.response);
-                          return (
-                            <div className="bg-gray-900 text-white rounded p-4 overflow-auto text-xs font-mono h-96 max-h-96">
-                              <pre>{JSON.stringify(data, null, 2)}</pre>
-                            </div>
-                          );
-                        } catch (e) {
-                          return (
-                            <>
-                              <div className="text-red-600 mb-2 font-semibold">Invalid JSON</div>
-                              <textarea
-                                className="bg-gray-100 border text-xs rounded p-2 w-full h-28"
-                                value={currentResult.response}
-                                readOnly
-                              />
-                            </>
-                          );
-                        }
-                      })()}
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            )}
-            {!loading && result.length > 0 && (
-              <div className="flex justify-end mt-6">
-                <Button variant="outline" onClick={handleDownloadAll}>
-                  Download Combined JSON
-                </Button>
-              </div>
-            )}
-          </main>
-        </div>
+          </Button>
+        </form>
       </div>
+
+      {/* RESULTS AREA */}
+      <div className={cn(
+        "flex flex-col md:flex-row gap-8 w-full max-w-6xl mx-auto px-2 relative z-10",
+        uploadedFiles.length === 0 && "opacity-50 pointer-events-none"
+      )}>
+        {/* SIDEBAR: Files */}
+        <aside className={cn(
+          "md:w-64 w-full flex-shrink-0",
+          "rounded-lg bg-indigo-50/90 dark:bg-zinc-800 shadow-md",
+          uploadedFiles.length === 0 && "hidden"
+        )}>
+          <Card className="bg-transparent border-none shadow-none">
+            <CardContent className="pt-4">
+              <div className="font-semibold text-indigo-700 dark:text-pink-200 mb-2">Documents</div>
+              <ul className="space-y-1">
+                {(uploadedFiles.length > 0 ? uploadedFiles : []).map((file) => (
+                  <li key={file.name}>
+                    <Button
+                      variant={selected === file.name ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start truncate font-medium rounded transition",
+                        selected === file.name
+                          ? "bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white shadow"
+                          : "hover:bg-indigo-100 dark:hover:bg-zinc-700"
+                      )}
+                      size="sm"
+                      onClick={() => setSelected(file.name)}
+                      disabled={loading}
+                    >
+                      {file.name}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </aside>
+
+        {/* MAIN PREVIEW */}
+        <main className="flex-1">
+          {loading && (
+            <div className="flex w-full items-center justify-center h-96">
+              <Skeleton className="w-full max-w-2xl h-96" />
+            </div>
+          )}
+          {!loading && uploadedFiles.length > 0 && currentResult && (
+            <div className="grid gap-8 md:grid-cols-2">
+              {/* PDF Preview */}
+              <div>
+                <Card className="h-full bg-gradient-to-br from-white to-indigo-100 dark:from-zinc-900 dark:to-indigo-950 shadow-lg">
+                  <CardContent>
+                    <div className="font-bold text-indigo-900 dark:text-fuchsia-300 mb-2">PDF Preview</div>
+                    {(() => {
+                      const file = uploadedFiles.find(f => f.name === currentResult.file);
+                      if (!file) return (<div className="text-sm text-muted-foreground mt-4">PDF not found.</div>);
+                      return (
+                        <iframe
+                          title={`PDF Preview - ${file.name}`}
+                          src={getPdfUrl(file)}
+                          className="w-full h-80 border rounded shadow"
+                          allow="autoplay"
+                          aria-label={`PDF Preview for ${file.name}`}
+                        />
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
+              {/* Extracted JSON */}
+              <div>
+                <Card className="h-full bg-gradient-to-bl from-white to-pink-100 dark:from-zinc-900 dark:to-pink-950 shadow-lg">
+                  <CardContent>
+                    <div className="font-bold text-fuchsia-700 dark:text-fuchsia-200 mb-2">Extracted JSON</div>
+                    {(() => {
+                      try {
+                        const data = JSON.parse(currentResult.response);
+                        return (
+                          <div className="bg-gray-900 text-white rounded p-4 overflow-auto text-xs font-mono h-80 max-h-80 border border-gray-800 shadow-inner">
+                            <pre>{JSON.stringify(data, null, 2)}</pre>
+                          </div>
+                        );
+                      } catch (e) {
+                        return (
+                          <>
+                            <div className="text-red-600 mb-2 font-semibold">Invalid JSON</div>
+                            <textarea
+                              className="bg-gray-100 border text-xs rounded p-2 w-full h-28"
+                              value={currentResult.response}
+                              readOnly
+                            />
+                          </>
+                        );
+                      }
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+          {!loading && result.length > 0 && (
+            <div className="flex justify-end mt-6">
+              <Button
+                variant="outline"
+                className="border-indigo-400 dark:border-fuchsia-700 font-semibold"
+                onClick={handleDownloadAll}
+              >
+                Download Combined JSON
+              </Button>
+            </div>
+          )}
+        </main>
+      </div>
+      <footer className="pt-10 pb-4 text-center text-xs text-gray-500 dark:text-gray-400 opacity-75">
+        &copy; {new Date().getFullYear()} W9 Extractor Tool. Made with <span className="text-pink-400">♥</span>.
+      </footer>
     </div>
   );
 }
