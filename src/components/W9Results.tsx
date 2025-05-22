@@ -4,6 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 type ExtractionResult = {
   file: string;
@@ -24,8 +32,16 @@ export const W9Results: React.FC<W9ResultsProps> = ({
   uploadedFiles,
   result,
   selected,
+  setSelected,
   handleDownloadAll,
 }) => {
+  // Always try to sync the selected file to the first result if none is selected.
+  React.useEffect(() => {
+    if (!selected && result.length > 0) {
+      setSelected(result[0].file);
+    }
+  }, [result, selected, setSelected]);
+
   const currentResult =
     result.find((r) => r.file === selected) ?? result[0] ?? null;
 
@@ -35,6 +51,33 @@ export const W9Results: React.FC<W9ResultsProps> = ({
 
   return (
     <main className="flex-1">
+      {/* DROPDOWN TO SELECT FILE */}
+      {!loading && uploadedFiles.length > 1 && (
+        <div className="w-full flex justify-center mb-4">
+          <Select
+            value={selected || uploadedFiles[0]?.name}
+            onValueChange={(val) => setSelected(val)}
+          >
+            <SelectTrigger className="w-64 bg-white dark:bg-zinc-800 border border-indigo-400 dark:border-fuchsia-700">
+              <SelectValue placeholder="Select a file..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {uploadedFiles.map((file) => (
+                  <SelectItem
+                    key={file.name}
+                    value={file.name}
+                    className="truncate"
+                  >
+                    {file.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {loading && (
         <div className="flex w-full items-center justify-center h-96">
           <Skeleton className="w-full max-w-2xl h-96" />
