@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -151,7 +152,8 @@ export default function W9Extractor() {
             e.preventDefault();
             handleExtract();
           }}
-          className="w-full flex flex-col md:flex-row gap-4 md:gap-2 items-stretch"
+          // Changed: Use flex-row for horizontal row, items-center for vertical alignment
+          className="w-full flex flex-row gap-4 items-center"
         >
           {/* Input + Label stack */}
           <div className="flex flex-col gap-1 flex-1">
@@ -171,12 +173,13 @@ export default function W9Extractor() {
               className="bg-white/80 dark:bg-zinc-800/70 border border-[#7a72ba] dark:border-fuchsia-700 transition-colors font-semibold outline-none focus:ring-2 focus:ring-[#c77dfa]/60"
               disabled={loading}
               required
+              style={{ minHeight: "44px" }} // To better align with button
             />
             <div className="text-xs text-muted-foreground pt-1 pl-1">
               Only PDF files are supported.
             </div>
           </div>
-          <div className="flex items-end justify-end">
+          <div className="flex items-end justify-end h-full pb-6 md:pb-0"> {/* pb-6 aligns the button towards baseline with desktop; mobile unaffected */}
             <Button
               type="submit"
               disabled={loading}
@@ -189,6 +192,8 @@ export default function W9Extractor() {
               )}
               style={{
                 boxShadow: "0 2px 24px -4px #d7b2f7b8",
+                minHeight: "44px", // Matches file input height
+                marginBottom: "0", // Ensure baseline alignment
               }}
             >
               {loading ? (
@@ -322,3 +327,4 @@ export default function W9Extractor() {
     </div>
   );
 }
+

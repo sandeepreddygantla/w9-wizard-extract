@@ -4,16 +4,18 @@ import { Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 
+// Ensure tailwind "class" strategy for dark mode, see tailwind.config.ts
 export function ThemeSwitcher() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
-  React.useEffect(() => setMounted(true), []);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!mounted) return null;
 
-  // Use resolvedTheme for SSR-safe detection
-  const isDark = (resolvedTheme || theme) === "dark";
+  const isDark = resolvedTheme === "dark";
 
   return (
     <Button
@@ -25,9 +27,12 @@ export function ThemeSwitcher() {
       tabIndex={0}
       type="button"
     >
-      {isDark
-        ? <Sun className="text-yellow-400" />
-        : <Moon className="text-blue-600" />}
+      {isDark ? (
+        <Sun className="text-yellow-400" />
+      ) : (
+        <Moon className="text-blue-600" />
+      )}
     </Button>
   );
 }
+
