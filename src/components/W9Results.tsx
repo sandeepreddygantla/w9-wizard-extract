@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,12 +38,6 @@ export const W9Results: React.FC<W9ResultsProps> = ({
       setSelected(result[0].file);
     }
   }, [result, selected, setSelected]);
-
-  // PDF zoom state
-  const [pdfZoom, setPdfZoom] = React.useState(1);
-  React.useEffect(() => {
-    setPdfZoom(1);
-  }, [selected, uploadedFiles.length]);
 
   const currentResult =
     result.find((r) => r.file === selected) ?? result[0] ?? null;
@@ -203,34 +196,6 @@ export const W9Results: React.FC<W9ResultsProps> = ({
               >
                 PDF Preview
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Zoom out"
-                  onClick={() => setPdfZoom(z => Math.max(z - 0.15, 0.25))}
-                  tabIndex={0}
-                  style={{
-                    borderColor: colors.marigold,
-                    background: colors.white,
-                  }}
-                >
-                  <ZoomOut color={colors.tango} />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Zoom in"
-                  onClick={() => setPdfZoom(z => Math.min(z + 0.15, 3))}
-                  tabIndex={0}
-                  style={{
-                    borderColor: colors.marigold,
-                    background: colors.white,
-                  }}
-                >
-                  <ZoomIn color={colors.tango} />
-                </Button>
-              </div>
             </div>
             <div
               className="flex-1 flex flex-col overflow-y-auto"
@@ -252,7 +217,7 @@ export const W9Results: React.FC<W9ResultsProps> = ({
                 // The key is important so it resets the doc on file change.
                 return (
                   <iframe
-                    key={file.name + pdfZoom}
+                    key={file.name}
                     title={`PDF Preview - ${file.name}`}
                     src={getPdfUrl(file)}
                     className="flex-1 w-full border-none"
@@ -261,7 +226,6 @@ export const W9Results: React.FC<W9ResultsProps> = ({
                       minHeight: "100%",
                       height: "calc(72vh - 56px)",
                       background: colors.water,
-                      zoom: pdfZoom,
                       display: "block",
                       padding: 0,
                       margin: 0,
@@ -282,6 +246,7 @@ export const W9Results: React.FC<W9ResultsProps> = ({
               color: colors.gray,
               border: `1px solid ${colors.grayLight}`,
               height: "72vh",
+              marginBottom: 32,
             }}
             className="json-output-col flex-1"
           >
@@ -342,7 +307,7 @@ export const W9Results: React.FC<W9ResultsProps> = ({
 
       {!loading && result.length > 0 && (
         <div
-          className="flex justify-end mt-6 w-full"
+          className="flex justify-end mt-12 w-full"
           style={{
             maxWidth: 1200,
             margin: "0 auto",
@@ -360,7 +325,7 @@ export const W9Results: React.FC<W9ResultsProps> = ({
               borderWidth: 1.5,
               borderStyle: "solid",
               borderRadius: 8,
-              padding: "11px 27px",
+              padding: "15px 36px",
               fontSize: "16px",
               boxShadow: "0 1px 4px 0 #ed7c1b3a",
               transition: "background 0.15s",

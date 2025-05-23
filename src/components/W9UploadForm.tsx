@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +27,8 @@ export const W9UploadForm: React.FC<W9UploadFormProps> = ({
     <div className="flex flex-col gap-1 flex-1">
       <Label
         htmlFor="file-uploader"
-        className="font-semibold text-[#4438ca] dark:text-fuchsia-300 text-base"
+        className="font-semibold text-base"
+        style={{ color: 'var(--primary)' }}
       >
         Upload PDF files
       </Label>
@@ -39,12 +39,12 @@ export const W9UploadForm: React.FC<W9UploadFormProps> = ({
         accept="application/pdf"
         multiple
         onChange={handleFileChange}
-        className="bg-white/80 dark:bg-zinc-800/70 border border-[#7a72ba] dark:border-fuchsia-700 transition-colors font-semibold outline-none focus:ring-2 focus:ring-[#c77dfa]/60"
+        className="transition-colors font-semibold outline-none focus:ring-2"
+        style={{ color: 'var(--text)', background: 'var(--surface)', borderColor: 'var(--border)', minHeight: '44px' }}
         disabled={loading}
         required
-        style={{ minHeight: "44px" }}
       />
-      <div className="text-xs text-muted-foreground pt-1 pl-1">
+      <div className="text-xs pt-1 pl-1" style={{ color: 'var(--text)', opacity: 0.7 }}>
         Only PDF files are supported.
       </div>
     </div>
@@ -52,9 +52,9 @@ export const W9UploadForm: React.FC<W9UploadFormProps> = ({
       <Button
         type="submit"
         disabled={loading}
-        className="px-8 py-2 font-semibold rounded-xl text-white shadow-lg transition-all duration-150 relative bg-gradient-to-br from-[#5b34ec] via-[#d935ae] to-[#fd62d9] hover:from-[#3821a6] hover:to-[#a43ffe] outline-none ring-0 border-0"
+        className="px-8 py-2 font-semibold rounded-xl text-white shadow-lg transition-all duration-150 relative bg-[#FF612B] hover:bg-[#d94e1f] outline-none ring-0 border-0"
         style={{
-          boxShadow: "0 2px 24px -4px #d7b2f7b8",
+          boxShadow: "0 2px 24px -4px #ff612b44",
           minHeight: "44px",
           marginBottom: "0",
         }}

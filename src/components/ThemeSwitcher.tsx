@@ -1,36 +1,45 @@
-
 import * as React from "react";
 import { Sun, Moon } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+
+const THEME_KEY = "optum-theme";
 
 // Ensure tailwind "class" strategy for dark mode, see tailwind.config.ts
 export function ThemeSwitcher() {
-  const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
+  const [isDark, setIsDark] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(THEME_KEY);
+      if (stored === "dark") return true;
+      if (stored === "light") return false;
+      return document.documentElement.classList.contains('dark');
+    }
+    return false;
+  });
 
   React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
-  const isDark = resolvedTheme === "dark";
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem(THEME_KEY, "dark");
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem(THEME_KEY, "light");
+    }
+  }, [isDark]);
 
   return (
     <Button
       variant="ghost"
       size="icon"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => setIsDark((d) => !d)}
       className="border border-primary/20 transition-all duration-200"
       tabIndex={0}
       type="button"
     >
       {isDark ? (
-        <Sun className="text-yellow-400" />
+        <span role="img" aria-label="Light mode">🌞</span>
       ) : (
-        <Moon className="text-blue-600" />
+        <span role="img" aria-label="Dark mode">🌙</span>
       )}
     </Button>
   );
