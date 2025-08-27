@@ -25,3 +25,6 @@ dist-ssr
 /.playwright-mcp/
 /test pdfs/
 w9-wizard-extract.zip
+deployment-guide.md
+README.md
+

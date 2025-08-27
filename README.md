@@ -1,73 +1,160 @@
-# Welcome to your Lovable project
+# W9 Data Extractor
 
-## Project info
+A modern web application for extracting structured data from W9 tax form PDFs using AI and Azure Document Intelligence.
 
-**URL**: https://lovable.dev/projects/12a12d32-ba31-49c6-953b-96c7788d8234
+## Features
 
-## How can I edit this code?
+- 🚀 **Modern React Frontend** - Built with React 18, TypeScript, and Tailwind CSS
+- 🤖 **AI-Powered Extraction** - Uses Azure OpenAI GPT-4 for intelligent data parsing
+- 📄 **Document Intelligence** - Azure Document Intelligence for PDF processing
+- 🎨 **Optum Design System** - Professional UI with light/dark mode support
+- 📱 **Responsive Design** - Works on desktop, tablet, and mobile devices
+- 🔒 **Enterprise Security** - Azure AD authentication and secure API handling
+- 🖱️ **Drag & Drop Upload** - Intuitive file upload interface
+- 📊 **JSON Export** - Download extracted data in structured JSON format
 
-There are several ways of editing your application.
+## Architecture
 
-**Use Lovable**
+### Frontend (React)
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite with SWC for fast compilation
+- **Styling**: Tailwind CSS with custom Optum design tokens
+- **Components**: Minimal shadcn/ui component set
+- **State**: React hooks for local state management
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/12a12d32-ba31-49c6-953b-96c7788d8234) and start prompting.
+### Backend (Python FastAPI)
+- **Framework**: FastAPI for modern async Python API
+- **AI/ML**: Azure OpenAI GPT-4.1 for data extraction
+- **Document Processing**: Azure Document Intelligence
+- **Validation**: Pydantic models for data validation
+- **Authentication**: Azure AD client credentials flow
 
-Changes made via Lovable will be committed automatically to this repo.
+## Quick Start
 
-**Use your preferred IDE**
+### 1. Clone and Install
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+git clone <repository-url>
+cd w9-wizard-extract
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Install frontend dependencies
+npm install
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Install backend dependencies  
+cd backend
+pip install -r requirements.txt
 ```
 
-**Edit a file directly in GitHub**
+### 2. Configure Environment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create `backend/.env` file with your Azure credentials:
 
-**Use GitHub Codespaces**
+```env
+AZURE_CLIENT_ID=your-client-id
+AZURE_CLIENT_SECRET=your-client-secret
+AZURE_PROJECT_ID=your-project-id
+tenant_id=your-tenant-id
+client_id=your-doc-intelligence-client-id
+client_secret=your-doc-intelligence-client-secret
+endpoint=your-doc-intelligence-endpoint
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 3. Development
 
-## What technologies are used for this project?
+```bash
+# Terminal 1: Start React dev server
+npm run dev
 
-This project is built with:
+# Terminal 2: Start Python API
+cd backend
+python api_server.py
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Visit `http://localhost:5173` to use the application.
 
-## How can I deploy this project?
+### 4. Production Build
 
-Simply open [Lovable](https://lovable.dev/projects/12a12d32-ba31-49c6-953b-96c7788d8234) and click on Share -> Publish.
+```bash
+# Build React app
+npm run build
 
-## Can I connect a custom domain to my Lovable project?
+# Start production server (serves React + API)
+cd backend
+python api_server.py
+```
 
-Yes, you can!
+Visit `http://localhost:8000` for the production build.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Deployment
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Windows IIS Server
+
+This application is designed for deployment on Windows IIS Server. See the detailed [Deployment Guide](deployment-guide.md) for step-by-step instructions.
+
+**Key deployment files:**
+- `web.config` - IIS configuration for frontend
+- `backend/web.config` - IIS configuration for Python API  
+- `deployment-guide.md` - Complete deployment instructions
+
+## How It Works
+
+1. **Upload**: Drag and drop PDF files or click to browse
+2. **Selection**: Choose which files to process (supports multiple files)
+3. **Processing**: 
+   - Azure Document Intelligence extracts text and form fields
+   - GPT-4 processes the extracted content into structured JSON
+   - Pydantic models validate and normalize the data
+4. **Results**: View extracted data with PDF preview side-by-side
+5. **Export**: Download all results as combined JSON file
+
+## API Endpoints
+
+- `GET /api/health` - Health check endpoint
+- `POST /api/extract` - Extract data from uploaded PDF files
+
+## Development Commands
+
+```bash
+npm run dev         # Start development server
+npm run build       # Build for production  
+npm run build:dev   # Build in development mode
+npm run lint        # Run ESLint
+npm run preview     # Preview production build
+```
+
+## Project Structure
+
+```
+w9-wizard-extract/
+├── src/                    # React frontend source
+│   ├── components/         # UI components
+│   ├── pages/             # Page components  
+│   ├── services/          # API service layer
+│   └── hooks/             # React hooks
+├── backend/               # Python FastAPI backend
+│   ├── api_server.py      # Main FastAPI application
+│   ├── app.py             # W9 extraction logic
+│   └── requirements.txt   # Python dependencies
+├── dist/                  # React build output
+└── deployment files...
+```
+
+## Contributing
+
+1. Follow the existing code style and conventions
+2. Use TypeScript for frontend code
+3. Include proper error handling
+4. Test thoroughly before submitting
+5. Update documentation as needed
+
+## Security
+
+- All Azure credentials should be stored securely (Azure Key Vault in production)
+- Never commit `.env` files with real credentials
+- API endpoints include proper validation and error handling
+- File uploads are restricted to PDF files only
+- Temporary files are cleaned up automatically
+
+## License
+
+© 2025 W9 Extractor Tool, Optum. All rights reserved.

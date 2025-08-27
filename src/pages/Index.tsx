@@ -1,10 +1,11 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { cn } from "@/lib/utils";
 import { FileUploadDropzone } from "@/components/FileUploadDropzone";
 import { W9FileManager } from "@/components/W9FileManager";
 import { W9Results } from "@/components/W9Results";
+import { apiService, formatExtractionResult, type ExtractionResult as ApiExtractionResult } from "@/services/api";
 
 type FileWithId = File & { id: string };
 
@@ -16,41 +17,87 @@ type ExtractionResult = {
 function useExtractW9Data() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ExtractionResult[]>([]);
+  const [apiConnected, setApiConnected] = useState(false);
+  const { toast } = useToast();
+
+  // Check API connection on component mount
+  useEffect(() => {
+    const checkApiConnection = async () => {
+      const isHealthy = await apiService.healthCheck();
+      setApiConnected(isHealthy);
+      if (!isHealthy) {
+        console.warn('API is not responding. Please make sure the backend server is running.');
+      }
+    };
+    
+    checkApiConnection();
+  }, []);
+
   const extract = async (files: File[]) => {
+    if (!apiConnected) {
+      toast({
+        title: "API Connection Error",
+        description: "Cannot connect to the backend server. Please make sure it's running.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setResult(
-      files.map((f) => ({
-        file: f.name,
-        response: JSON.stringify(
-          {
-            name: "John Doe",
-            ein: "12-3456789",
-            ssn: "XXX-XX-6789",
-            entity_type: "Individual/sole proprietor",
-            address: "123 Sample St",
-            city: "Somewhere",
-            state: "TX",
-            zip: "75001",
-            signed: "Y",
-            signature_date: "2024-05-21",
-            file: f.name,
-          },
-          null,
-          2
-        ),
-      }))
-    );
-    setLoading(false);
+    
+    try {
+      console.log(`Starting extraction for ${files.length} files...`);
+      
+      // Call the real API
+      const apiResponse = await apiService.extractW9Data(files);
+      
+      if (apiResponse.success) {
+        // Convert API response format to the format expected by the UI
+        const formattedResults: ExtractionResult[] = apiResponse.results.map((apiResult: ApiExtractionResult) => ({
+          file: apiResult.filename,
+          response: formatExtractionResult(apiResult)
+        }));
+        
+        setResult(formattedResults);
+        console.log('Extraction completed successfully:', formattedResults);
+      } else {
+        throw new Error(apiResponse.message || 'Extraction failed');
+      }
+      
+    } catch (error) {
+      console.error('Extraction error:', error);
+      
+      // Show error toast
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      toast({
+        title: "Extraction Failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      
+      // Set error results for files that failed
+      const errorResults: ExtractionResult[] = files.map(file => ({
+        file: file.name,
+        response: JSON.stringify({
+          error: errorMessage,
+          file: file.name
+        }, null, 2)
+      }));
+      
+      setResult(errorResults);
+    } finally {
+      setLoading(false);
+    }
   };
-  return { loading, extract, result, setResult };
+  
+  return { loading, extract, result, setResult, apiConnected };
 }
 
 export default function Index() {
   const { toast } = useToast();
   const [uploadedFiles, setUploadedFiles] = useState<FileWithId[]>([]);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
-  const { loading, extract, result, setResult } = useExtractW9Data();
+  const { loading, extract, result, setResult, apiConnected } = useExtractW9Data();
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleFilesAdded = (newFiles: File[]) => {
@@ -156,7 +203,18 @@ export default function Index() {
           <span role="img" aria-label="document">📄</span>
           <span className="font-black tracking-tight">W9 Extractor</span>
         </h1>
-        <ThemeSwitcher />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div 
+              className={`w-2 h-2 rounded-full ${apiConnected ? 'bg-green-500' : 'bg-red-500'}`}
+              title={apiConnected ? 'API Connected' : 'API Disconnected'}
+            />
+            <span className="text-sm opacity-70">
+              {apiConnected ? 'API Connected' : 'API Offline'}
+            </span>
+          </div>
+          <ThemeSwitcher />
+        </div>
       </header>
 
       {/* HERO BANNER */}

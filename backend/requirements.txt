@@ -1,0 +1,27 @@
+# FastAPI and server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Azure and authentication
+azure-identity==1.15.0
+azure-ai-documentintelligence==1.0.0b1
+
+# LangChain for LLM
+langchain-openai==0.0.5
+langchain==0.1.0
+
+# HTTP client
+httpx==0.25.2
+
+# Data validation and parsing
+pydantic==2.5.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Token encoding
+tiktoken==0.5.2
+
+# Other utilities
+typing-extensions==4.8.0
