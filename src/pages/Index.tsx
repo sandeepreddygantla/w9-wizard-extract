@@ -1,15 +1,12 @@
 import React, { useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { cn } from "@/lib/utils";
-import { W9UploadForm } from "@/components/W9UploadForm";
-import { W9Sidebar } from "@/components/W9Sidebar";
+import { FileUploadDropzone } from "@/components/FileUploadDropzone";
+import { W9FileManager } from "@/components/W9FileManager";
 import { W9Results } from "@/components/W9Results";
+
+type FileWithId = File & { id: string };
 
 type ExtractionResult = {
   file: string;
@@ -51,26 +48,68 @@ function useExtractW9Data() {
 
 export default function Index() {
   const { toast } = useToast();
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<FileWithId[]>([]);
+  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const { loading, extract, result, setResult } = useExtractW9Data();
   const [selected, setSelected] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files ? Array.from(e.target.files) : [];
-    setUploadedFiles(files);
-    setResult([]); // Reset results on new upload
+  const handleFilesAdded = (newFiles: File[]) => {
+    const filesWithIds: FileWithId[] = newFiles.map(file => 
+      Object.assign(file, { id: `${file.name}-${Date.now()}-${Math.random()}` })
+    );
+    
+    setUploadedFiles(prev => [...prev, ...filesWithIds]);
+    setSelectedFileIds(prev => [...prev, ...filesWithIds.map(f => f.id)]);
+    setResult([]);
     setSelected(null);
+    
+    toast({ 
+      title: `Added ${newFiles.length} file${newFiles.length > 1 ? 's' : ''}`
+    });
+  };
+  
+  const handleSelectFile = (fileId: string) => {
+    setSelectedFileIds(prev => 
+      prev.includes(fileId) 
+        ? prev.filter(id => id !== fileId)
+        : [...prev, fileId]
+    );
+  };
+  
+  const handleSelectAll = () => {
+    setSelectedFileIds(uploadedFiles.map(f => f.id));
+  };
+  
+  const handleClearAll = () => {
+    setUploadedFiles([]);
+    setSelectedFileIds([]);
+    setResult([]);
+    setSelected(null);
+    toast({ title: "All files cleared" });
+  };
+  
+  const handleDeleteFile = (fileId: string) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+    setSelectedFileIds(prev => prev.filter(id => id !== fileId));
+    
+    // If the deleted file was selected for viewing, clear the selection
+    const deletedFile = uploadedFiles.find(f => f.id === fileId);
+    if (deletedFile && selected === deletedFile.name) {
+      setSelected(null);
+    }
+    
+    toast({ title: "File deleted" });
   };
 
   const handleExtract = async () => {
-    if (!uploadedFiles.length) {
-      toast({ title: "Please select PDF file(s) to extract." });
+    const selectedFiles = uploadedFiles.filter(f => selectedFileIds.includes(f.id));
+    if (!selectedFiles.length) {
+      toast({ title: "Please select files to extract." });
       return;
     }
-    await extract(uploadedFiles);
+    await extract(selectedFiles);
     toast({ title: "Extraction complete!" });
-    setSelected(uploadedFiles[0]?.name ?? null);
+    setSelected(selectedFiles[0]?.name ?? null);
   };
 
   const handleDownloadAll = () => {
@@ -128,35 +167,32 @@ export default function Index() {
         >
           Instantly Extract Data from your W9 PDFs
         </h2>
-        <p className="text-lg md:text-xl font-medium mb-6 max-w-2xl drop-shadow" style={{ color: 'var(--text)' }}>
-          Securely upload your W9 form PDFs and let our smart extractor pull out the data you need. Fast, accurate, Optum-branded results.
+        <p className="text-lg md:text-xl font-medium mb-6 max-w-2xl drop-shadow" style={{ color: 'var(--secondary-text)' }}>
+          Securely upload your W9 form PDFs and let our smart extractor pull out the data you need. Fast, accurate, and reliable results.
         </p>
       </section>
 
-      {/* CENTERED UPLOAD FORM */}
-      <div className="w-full flex justify-center items-center mb-4" style={{ marginTop: 0 }}>
-        <div
-          className={cn("flex flex-col items-center justify-center rounded-2xl px-8 py-6 shadow-xl")}
-          style={{
-            background: "var(--surface)",
-            boxShadow: "0 8px 40px 8px #ff612b11",
-            borderRadius: "20px",
-            maxWidth: 600,
-            minWidth: 340,
-            border: "1.5px solid var(--border)",
-          }}
-        >
-          <W9UploadForm
-            loading={loading}
-            handleExtract={handleExtract}
-            handleFileChange={handleFileChange}
-            fileInputRef={fileInputRef}
-          />
-        </div>
+      {/* UPLOAD SECTION */}
+      <div className="w-full flex flex-col items-center mb-8 px-4">
+        <FileUploadDropzone
+          onFilesAdded={handleFilesAdded}
+          loading={loading}
+        />
+        
+        <W9FileManager
+          files={uploadedFiles}
+          selectedFiles={selectedFileIds}
+          loading={loading}
+          onSelectFile={handleSelectFile}
+          onSelectAll={handleSelectAll}
+          onClearAll={handleClearAll}
+          onDeleteFile={handleDeleteFile}
+          onExtract={handleExtract}
+        />
       </div>
 
       {/* CENTERED RESULTS + DROPDOWN */}
-      <div className="w-full flex flex-col items-center justify-center px-0" style={{ minHeight: 440, width: "100vw" }}>
+      <div className="w-full flex flex-col items-center justify-center px-4" style={{ minHeight: 440 }}>
         <W9Results
           loading={loading}
           uploadedFiles={uploadedFiles}

@@ -5,10 +5,12 @@
 @layer base {
   :root {
     --background: #FAF8F2;
-    --surface: #FFF;
-    --text: #000;
+    --surface: #FFFFFF;
+    --text: #002677;
     --primary: #FF612B;
-    --primary-foreground: #FFF;
+    --primary-foreground: #FFFFFF;
+    --secondary-text: #4B4D4F;
+    --light-blue: #D9F6FA;
     --border: #E5E7EB;
 
     --secondary: var(--background);
@@ -41,9 +43,11 @@
   .dark {
     --background: #23272A;
     --surface: #2C2F34;
-    --text: #FFF;
+    --text: #FFFFFF;
     --primary: #FF612B;
-    --primary-foreground: #FFF;
+    --primary-foreground: #FFFFFF;
+    --secondary-text: #B3B3B3;
+    --light-blue: #2C3E50;
     --border: #3A3F45;
 
     --card: 222.2 84% 4.9%;
@@ -82,7 +86,14 @@
     @apply border-border;
   }
 
-  body {
+  html, body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  #root {
+    overflow-x: hidden;
+    max-width: 100%;
   }
 }

@@ -10,7 +10,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { ZoomIn, ZoomOut } from "lucide-react";
+
+type FileWithId = File & { id: string };
 
 type ExtractionResult = {
   file: string;
@@ -18,7 +19,7 @@ type ExtractionResult = {
 };
 type W9ResultsProps = {
   loading: boolean;
-  uploadedFiles: File[];
+  uploadedFiles: FileWithId[];
   result: ExtractionResult[];
   selected: string | null;
   setSelected: (fileName: string | null) => void;
@@ -42,7 +43,16 @@ export const W9Results: React.FC<W9ResultsProps> = ({
   const currentResult =
     result.find((r) => r.file === selected) ?? result[0] ?? null;
 
-  const getPdfUrl = (file: File) => URL.createObjectURL(file);
+  const getPdfUrl = (file: File) => {
+    if (!file) return null;
+    try {
+      const url = URL.createObjectURL(file);
+      return `${url}#page=1&zoom=page-width&view=FitH`;
+    } catch (error) {
+      console.error('Error creating object URL:', error);
+      return null;
+    }
+  };
 
   if (!uploadedFiles.length) return null;
 
@@ -67,9 +77,8 @@ export const W9Results: React.FC<W9ResultsProps> = ({
     boxShadow: "0 2px 16px 2px #00000008",
     display: "flex",
     flexDirection: "column" as const,
-    width: "50%",
+    width: "100%",
     minWidth: 320,
-    maxWidth: "1fr",
     height: "100%",
   };
 
@@ -77,13 +86,7 @@ export const W9Results: React.FC<W9ResultsProps> = ({
   return (
     <main className="flex flex-col items-center justify-center w-full">
       {/* DROPDOWN AREA */}
-      <div
-        className="flex flex-col items-center w-full"
-        style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-        }}
-      >
+      <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
         <div
           className="w-full"
           style={{
@@ -93,12 +96,12 @@ export const W9Results: React.FC<W9ResultsProps> = ({
             marginBottom: 16,
             boxShadow: "0 2px 8px 0 #0001",
             border: `1px solid ${colors.grayLight}`,
-            display: uploadedFiles.length > 1 ? "block" : "none",
+            display: result.length > 1 ? "block" : "none",
           }}
         >
-          {uploadedFiles.length > 1 && (
+          {result.length > 1 && (
             <Select
-              value={selected || uploadedFiles[0]?.name}
+              value={selected || result[0]?.file}
               onValueChange={val => setSelected(val)}
             >
               <SelectTrigger className={cn(
@@ -127,14 +130,14 @@ export const W9Results: React.FC<W9ResultsProps> = ({
                 }}
               >
                 <SelectGroup>
-                  {uploadedFiles.map((file) => (
+                  {result.map((res) => (
                     <SelectItem
-                      key={file.name}
-                      value={file.name}
+                      key={res.file}
+                      value={res.file}
                       className="truncate"
                       style={{ color: colors.grayDark, background: colors.white }}
                     >
-                      {file.name}
+                      {res.file}
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -146,28 +149,22 @@ export const W9Results: React.FC<W9ResultsProps> = ({
 
       {loading && (
         <div
-          className="flex w-full items-center justify-center"
+          className="flex w-full items-center justify-center px-4 max-w-4xl mx-auto"
           style={{
-            maxWidth: 1200,
-            minHeight: 440,
-            height: "62vh",
-            margin: "0 auto",
+            minHeight: 600,
+            height: "85vh",
           }}
         >
           <Skeleton className="w-full h-full max-w-7xl" />
         </div>
       )}
 
-      {!loading && uploadedFiles.length > 0 && currentResult && (
+      {!loading && result.length > 0 && currentResult && (
         <div
-          className="flex flex-row items-stretch justify-center"
+          className="flex flex-col lg:flex-row items-stretch justify-center w-full px-4 max-w-4xl mx-auto"
           style={{
-            maxWidth: 1200,
-            width: "100vw",
-            minHeight: 440,
-            margin: "0 auto",
+            minHeight: 600,
             background: "transparent",
-            padding: "0",
             gap: 16,
           }}
         >
@@ -176,11 +173,10 @@ export const W9Results: React.FC<W9ResultsProps> = ({
             style={{
               ...panelStyle,
               background: colors.water,
-              marginRight: 8, // gutter
               color: colors.gray,
-              height: "72vh",
+              height: "85vh",
             }}
-            className="pdf-preview-col flex-1"
+            className="pdf-preview-col flex-1 lg:w-1/2"
           >
             <div
               className="flex items-center justify-between mb-3 px-5 pt-5"
@@ -203,34 +199,44 @@ export const W9Results: React.FC<W9ResultsProps> = ({
                 padding: 0,
                 margin: 0,
                 minHeight: 0,
-                height: "calc(72vh - 52px)",
+                height: "calc(85vh - 52px)",
                 overflowX: "hidden",
               }}
             >
               {(() => {
                 const file = uploadedFiles.find(f => f.name === currentResult.file);
                 if (!file) return (
-                  <div className="text-sm mt-4" style={{ color: colors.gray }}>
-                    PDF not found.
+                  <div className="text-center text-sm mt-8 p-4" style={{ color: colors.gray }}>
+                    <span className="text-4xl mb-2 block">📄</span>
+                    <p>PDF Preview</p>
+                    <p className="text-xs opacity-75">File not available for preview</p>
                   </div>
                 );
-                // The key is important so it resets the doc on file change.
+                const pdfUrl = getPdfUrl(file);
+                if (!pdfUrl) return (
+                  <div className="text-center text-sm mt-8 p-4" style={{ color: colors.gray }}>
+                    <span className="text-4xl mb-2 block">📄</span>
+                    <p>PDF Preview</p>
+                    <p className="text-xs opacity-75">Error loading PDF preview</p>
+                  </div>
+                );
+                
                 return (
                   <iframe
-                    key={file.name}
+                    key={`pdf-${file.name}-${file.size}`}
                     title={`PDF Preview - ${file.name}`}
-                    src={getPdfUrl(file)}
+                    src={pdfUrl}
                     className="flex-1 w-full border-none"
                     style={{
                       width: "100%",
                       minHeight: "100%",
-                      height: "calc(72vh - 56px)",
+                      height: "calc(85vh - 56px)",
                       background: colors.water,
                       display: "block",
                       padding: 0,
                       margin: 0,
                     }}
-                    allow="autoplay"
+                    loading="eager"
                     aria-label={`PDF Preview for ${file.name}`}
                   />
                 );
@@ -245,10 +251,9 @@ export const W9Results: React.FC<W9ResultsProps> = ({
               background: colors.white,
               color: colors.gray,
               border: `1px solid ${colors.grayLight}`,
-              height: "72vh",
-              marginBottom: 32,
+              height: "85vh",
             }}
-            className="json-output-col flex-1"
+            className="json-output-col flex-1 lg:w-1/2"
           >
             <div
               className="font-bold mb-0 px-5 pt-5 pb-0"
@@ -270,7 +275,7 @@ export const W9Results: React.FC<W9ResultsProps> = ({
                 borderRadius: "0 0 12px 12px",
                 padding: "20px 12px 10px 16px",
                 fontSize: "13px",
-                height: "calc(72vh - 52px)",
+                height: "calc(85vh - 52px)",
                 minHeight: 0,
                 margin: 0,
                 overflowX: "auto",
@@ -306,14 +311,7 @@ export const W9Results: React.FC<W9ResultsProps> = ({
       )}
 
       {!loading && result.length > 0 && (
-        <div
-          className="flex justify-end mt-12 w-full"
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            paddingRight: 4,
-          }}
-        >
+        <div className="flex justify-end mt-12 w-full px-4 max-w-4xl mx-auto">
           <Button
             variant="outline"
             className="font-semibold"
